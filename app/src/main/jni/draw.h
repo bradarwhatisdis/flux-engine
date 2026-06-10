@@ -122,10 +122,8 @@ static void DrawTabBar(float winW) {
     float tabY = winPos.y + (barH - tabHeight) * 0.5f;
     float tabWidth = winW / tabCount;
 
-    SetCursorPos(ImVec2(0, tabY - winPos.y));
-
     for (int i = 0; i < tabCount; i++) {
-        SetCursorPosX(i * tabWidth);
+        SetCursorPos(ImVec2(i * tabWidth, tabY - winPos.y));
         if (TabButton(tabLabels[i], tabIcons[i], g_menu.currentTab == i, tabWidth, tabHeight) && g_menu.currentTab != i) {
             g_menu.prevTab = g_menu.currentTab;
             g_menu.currentTab = i;
