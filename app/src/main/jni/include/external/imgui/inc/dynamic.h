@@ -8,11 +8,11 @@ using namespace std;
 struct DynamicBool : map<const char*, bool> {
     DynamicBool() { }
     
-    bool operator[](const char* key, bool defaultValue = false) {
+    bool operator[](const char* key) {
         auto it = find(key);
         if (it == end()) {
-            insert({key, defaultValue});
-            return defaultValue;
+            insert({key, false});
+            return false;
         }
         return it->second;
     }
@@ -23,11 +23,11 @@ struct DynamicBool : map<const char*, bool> {
 struct DynamicString : map<const char*, std::string> {
     DynamicString() { }
     
-    std::string operator[](const char* key, std::string defaultValue = "") {
+    std::string operator[](const char* key) {
         auto it = find(key);
         if (it == end()) {
-            insert({key, defaultValue});
-            return defaultValue;
+            insert({key, ""});
+            return "";
         }
         return it->second;
     }
