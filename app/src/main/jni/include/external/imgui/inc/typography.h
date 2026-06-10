@@ -11,11 +11,11 @@
 
 struct FluxFont {
     // ── Size tiers ───────────────────────────────────────
-    static constexpr float H1       = 32.0f;
-    static constexpr float H2       = 26.0f;
-    static constexpr float Body     = 18.0f;
-    static constexpr float Small    = 16.0f;
-    static constexpr float Tiny     = 14.0f;
+    static constexpr float H1       = 48.0f;
+    static constexpr float H2       = 40.0f;
+    static constexpr float Body     = 34.0f;
+    static constexpr float Small    = 28.0f;
+    static constexpr float Tiny     = 22.0f;
 
     // ── Draw helpers (ImDrawList::AddText with explicit size) ─
     static void DrawH1(ImDrawList* dl, const char* text, ImVec2 pos, ImU32 color) {
