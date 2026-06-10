@@ -31,7 +31,7 @@ struct MenuState {
     int currentTab = 0;
     int prevTab = 0;
     float tabTransition = 0.0f;  // 0=idle, animating to 1
-    float sidebarWidth = 300.0f;
+    float sidebarWidth = 320.0f;
     float animProgress = 0.0f;
     float menuAlpha = 0.0f;
     float menuScale = 0.9f;
@@ -66,7 +66,7 @@ static bool SidebarButton(const char* label, const char* icon, bool selected, fl
     const ImGuiID id = window->GetID(label);
 
     ImVec2 pos = window->DC.CursorPos;
-    ImVec2 size = ImVec2(width - 12.0f, 56.0f);
+    ImVec2 size = ImVec2(width - 12.0f, 62.0f);
 
     const ImRect bb(pos, pos + size);
     ItemSize(size, style.FramePadding.y);
@@ -115,8 +115,8 @@ static bool ToggleSwitch(const char* label, bool* v) {
     const ImGuiStyle& style = g.Style;
     const ImGuiID id = window->GetID(label);
 
-    float height = 34.0f;
-    float width = 56.0f;
+    float height = 44.0f;
+    float width = 66.0f;
     float radius = height * 0.5f;
 
     ImVec2 textSize = CalcTextSize(label);
@@ -645,8 +645,8 @@ INLINE void DrawMenu(ImGuiIO& io) {
         }
 
         if (g_menu.menuAlpha > 0.01f) {
-            float winW = 800.0f;
-            float winH = 580.0f;
+            float winW = 860.0f;
+            float winH = 620.0f;
             
             SetNextWindowSize(ImVec2(winW, winH), ImGuiCond_Always);
             SetNextWindowPos(ImVec2(Width / 2.0f, Height / 2.0f), ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
@@ -740,7 +740,7 @@ static void DrawFloatingButton(ImGuiIO& io) {
                       48, 2.5f);
         
         // Icon (white)
-        float iconSize = 11.0f;
+        float iconSize = 14.0f;
         ImU32 iconColor = FluxPalette::TextPrimary();
         
         if (g_menu.isOpen) {
@@ -753,7 +753,7 @@ static void DrawFloatingButton(ImGuiIO& io) {
                         iconColor, 3.0f);
         } else {
             // Hamburger (3 bars)
-            float barW = 14.0f;
+            float barW = 16.0f;
             float barH = 2.5f;
             float gap = 5.5f;
             float r = 2.0f;
@@ -807,7 +807,7 @@ INLINE void DrawLogin(ImGuiIO& io) {
     PopStyleColor();
 
     float cardW = 520;
-    float cardH = 400;
+    float cardH = 440;
 
     SetNextWindowSize(ImVec2(cardW, cardH), ImGuiCond_Always);
     SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
@@ -908,7 +908,7 @@ INLINE void DrawLogin(ImGuiIO& io) {
         PushStyleColor(ImGuiCol_ButtonActive, FluxPalette::PrimaryDarkV());
         PushStyleVar(ImGuiStyleVar_FrameRounding, 14.0f);
         
-        if (AutoLogin || Button(O("LOGIN WITH CLIPBOARD"), ImVec2(cardW - 80, 60))) {
+        if (AutoLogin || Button(O("LOGIN WITH CLIPBOARD"), ImVec2(cardW - 80, 64))) {
             JNIEnv* env;
             jint getEnvResult = VM->GetEnv((void**)&env, JNI_VERSION_1_6);
             if (getEnvResult == JNI_EDETACHED) {

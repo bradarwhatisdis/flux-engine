@@ -99,7 +99,7 @@ static std::map<std::string, float> persistent_float = {
     {"fANYTHING2", 1.0f},
     {"fAIM_NoRecoilMultiplier", 1.5f},
 
-    {"fFontScale", 40.0f},
+    {"fFontScale", 18.0f},
     {"fESP_UpdateFps", 60.0f},
     {"fAIM_SnapStrength", 0.04f},
     {"fAIM_MaxSnapPerFrame", 1.f},
