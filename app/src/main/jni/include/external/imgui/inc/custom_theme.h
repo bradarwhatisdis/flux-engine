@@ -34,6 +34,7 @@ struct FluxPalette {
     static ImVec4 PrimaryDarkV(float a = 1.0f)   { return ImVec4(0.80f, 0.33f, 0.00f, a); }
     static ImVec4 AmberV(float a = 1.0f)         { return ImVec4(1.00f, 0.60f, 0.00f, a); }
     static ImVec4 SurfaceCardV(float a = 1.0f)   { return ImVec4(0.04f, 0.04f, 0.04f, a); }
+    static ImVec4 SurfaceBgV(float a = 1.0f)     { return ImVec4(0.00f, 0.00f, 0.00f, a); }
     static ImVec4 SurfaceElevatedV(float a = 1.0f) { return ImVec4(0.08f, 0.08f, 0.09f, a); }
     static ImVec4 RedV(float a = 1.0f)           { return ImVec4(1.00f, 0.13f, 0.13f, a); }
     static ImVec4 RedGlowV(float a = 1.0f)       { return ImVec4(1.00f, 0.27f, 0.27f, a); }
@@ -68,9 +69,9 @@ inline void StyleColorsCustom(ImGuiStyle* _style = nullptr) {
     style.Colors[ImGuiCol_FrameBg]           = FluxPalette::SurfaceElevatedV(0.90f);
     style.Colors[ImGuiCol_FrameBgHovered]    = FluxPalette::PrimaryV(0.15f);
     style.Colors[ImGuiCol_FrameBgActive]     = FluxPalette::PrimaryV(0.25f);
-    style.Colors[ImGuiCol_TitleBg]           = FluxPalette::SurfaceBg();
+    style.Colors[ImGuiCol_TitleBg]           = FluxPalette::SurfaceBgV();
     style.Colors[ImGuiCol_TitleBgActive]     = FluxPalette::PrimaryV(0.35f);
-    style.Colors[ImGuiCol_MenuBarBg]         = FluxPalette::SurfaceCard();
+    style.Colors[ImGuiCol_MenuBarBg]         = FluxPalette::SurfaceCardV();
 
     // ── Widget Colors ────────────────────────────────────────
     style.Colors[ImGuiCol_Button]            = FluxPalette::PrimaryV(0.85f);
@@ -94,7 +95,7 @@ inline void StyleColorsCustom(ImGuiStyle* _style = nullptr) {
     style.Colors[ImGuiCol_ScrollbarGrabActive]  = FluxPalette::PrimaryGlowV();
 
     // ── Checkbox / Combo ─────────────────────────────────────
-    style.Colors[ImGuiCol_CheckMark]         = FluxPalette::Primary();
+    style.Colors[ImGuiCol_CheckMark]         = FluxPalette::PrimaryV();
 
     // ── Text ─────────────────────────────────────────────────
     style.Colors[ImGuiCol_Text]              = FluxPalette::TextPrimaryV();
@@ -111,10 +112,6 @@ inline void StyleColorsCustom(ImGuiStyle* _style = nullptr) {
     style.Colors[ImGuiCol_TabActive]         = FluxPalette::PrimaryV(0.80f);
     style.Colors[ImGuiCol_TabUnfocused]      = FluxPalette::SurfaceCardV(0.86f);
     style.Colors[ImGuiCol_TabUnfocusedActive]= FluxPalette::SurfaceElevatedV(0.90f);
-
-    // ── Docking ──────────────────────────────────────────────
-    style.Colors[ImGuiCol_DockingPreview]    = FluxPalette::PrimaryV(0.50f);
-    style.Colors[ImGuiCol_DockingEmptyBg]    = FluxPalette::SurfaceBg();
 
     // ── Modal ────────────────────────────────────────────────
     style.Colors[ImGuiCol_ModalWindowDimBg]  = ImVec4(0.00f, 0.00f, 0.00f, 0.60f);

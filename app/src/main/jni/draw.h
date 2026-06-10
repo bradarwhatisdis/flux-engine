@@ -100,7 +100,7 @@ static bool SidebarButton(const char* label, const char* icon, bool selected, fl
     
     float textX = bb.Min.x + 46.0f + iconOffset;
     float textY = bb.Min.y + (size.y - FluxFont::Small) * 0.5f;
-    FluxFont::DrawText(dl, label, ImVec2(textX, textY),
+    FluxFont::RenderText(dl, label, ImVec2(textX, textY),
                        selected ? FluxPalette::TextPrimary() : FluxPalette::TextSecondary((int)(200 + 55 * animT)),
                        FluxFont::Small);
 
@@ -146,9 +146,14 @@ static bool ToggleSwitch(const char* label, bool* v) {
     ImVec2 toggleEnd = ImVec2(togglePos.x + width, togglePos.y + height);
     
     // Track: interpolate from dark grey to orange
-    ImU32 offCol = FluxPalette::SurfaceElevated();
-    ImU32 onCol = FluxPalette::Primary();
-    ImU32 trackCol = ImLerp(ImColor(offCol), ImColor(onCol), animT);
+    ImVec4 off4 = FluxPalette::SurfaceElevatedV();
+    ImVec4 on4 = FluxPalette::PrimaryV();
+    ImVec4 track4;
+    track4.x = off4.x + (on4.x - off4.x) * animT;
+    track4.y = off4.y + (on4.y - off4.y) * animT;
+    track4.z = off4.z + (on4.z - off4.z) * animT;
+    track4.w = off4.w + (on4.w - off4.w) * animT;
+    ImU32 trackCol = ImGui::ColorConvertFloat4ToU32(track4);
     dl->AddRectFilled(togglePos, toggleEnd, (ImU32)trackCol, radius);
     
     // Glow ring behind knob when ON
