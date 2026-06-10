@@ -27,13 +27,13 @@ using namespace std;
 #include <GLES3/gl3.h>
 
 struct MenuState {
-    bool isOpen = true; // DEBUG: force open to test rendering
+    bool isOpen = false;
     int currentTab = 0;
     int prevTab = 0;
-    float tabTransition = 0.0f;  // 0=idle, animating to 1
-    float sidebarWidth = 320.0f;
+    float tabTransition = 0.0f;
+    float tabBarHeight = 80.0f;
     float animProgress = 0.0f;
-    float menuAlpha = 1.0f; // DEBUG: force visible
+    float menuAlpha = 0.0f;
     float menuScale = 0.9f;
     ImVec4 accentColor = FluxPalette::PrimaryV();
 };
@@ -57,19 +57,18 @@ static void DrawGradientRect(ImDrawList* dl, ImVec2 p1, ImVec2 p2, ImU32 col1, I
     }
 }
 
-static bool SidebarButton(const char* label, const char* icon, bool selected, float width) {
+static bool TabButton(const char* label, const char* icon, bool selected, float width, float height) {
     ImGuiWindow* window = GetCurrentWindow();
     if (window->SkipItems) return false;
 
     ImGuiContext& g = *GImGui;
-    const ImGuiStyle& style = g.Style;
     const ImGuiID id = window->GetID(label);
 
     ImVec2 pos = window->DC.CursorPos;
-    ImVec2 size = ImVec2(width - 12.0f, 68.0f);
+    ImVec2 size = ImVec2(width, height);
 
     const ImRect bb(pos, pos + size);
-    ItemSize(size, style.FramePadding.y);
+    ItemSize(size, 0.0f);
     if (!ItemAdd(bb, id)) return false;
 
     bool hovered, held;
@@ -81,30 +80,58 @@ static bool SidebarButton(const char* label, const char* icon, bool selected, fl
     animT += (targetT - animT) * g.IO.DeltaTime * 12.0f;
 
     ImDrawList* dl = window->DrawList;
-    
+
     if (selected) {
-        dl->AddRectFilled(bb.Min, bb.Max, FluxPalette::Primary(220), 14.0f);
-        dl->AddRectFilled(ImVec2(bb.Min.x, bb.Min.y + 4), ImVec2(bb.Min.x + 4, bb.Max.y - 4),
-                          FluxPalette::PrimaryGlow(), 2.0f);
+        dl->AddRectFilled(bb.Min, bb.Max, FluxPalette::Primary(220), 12.0f);
     } else if (animT > 0.01f) {
         ImU32 hoverCol = FluxPalette::Primary((int)(40 * animT));
-        dl->AddRectFilled(bb.Min, bb.Max, hoverCol, 14.0f);
+        dl->AddRectFilled(bb.Min, bb.Max, hoverCol, 12.0f);
     }
 
-    float iconOffset = 6.0f * animT;
-    float iconX = bb.Min.x + 20.0f + iconOffset;
-    float iconY = bb.Min.y + (size.y - FluxFont::Small) * 0.5f;
-    FluxFont::RenderText(dl, icon, ImVec2(iconX, iconY),
+    float iconY = bb.Min.y + (height - FluxFont::Small) * 0.5f;
+    float iconSize = 14.0f;
+    ImVec2 textSize = CalcTextSize(label);
+    float totalW = iconSize + 8.0f + textSize.x;
+    float startX = bb.Min.x + (width - totalW) * 0.5f;
+
+    FluxFont::RenderText(dl, icon, ImVec2(startX, iconY),
                        selected ? FluxPalette::TextPrimary() : FluxPalette::TextMuted((int)(180 + 75 * animT)),
                        FluxFont::Small);
-    
-    float textX = bb.Min.x + 46.0f + iconOffset;
-    float textY = bb.Min.y + (size.y - FluxFont::Small) * 0.5f;
-    FluxFont::RenderText(dl, label, ImVec2(textX, textY),
+    FluxFont::RenderText(dl, label, ImVec2(startX + iconSize + 8.0f, iconY),
                        selected ? FluxPalette::TextPrimary() : FluxPalette::TextSecondary((int)(200 + 55 * animT)),
                        FluxFont::Small);
 
     return pressed;
+}
+
+static void DrawTabBar(float winW) {
+    ImDrawList* dl = GetWindowDrawList();
+    ImVec2 winPos = GetWindowPos();
+
+    float barH = g_menu.tabBarHeight;
+
+    dl->AddRectFilled(winPos, ImVec2(winPos.x + winW, winPos.y + barH), FluxPalette::SurfaceCard());
+    dl->AddRectFilled(ImVec2(winPos.x, winPos.y + barH - 1), ImVec2(winPos.x + winW, winPos.y + barH),
+                      FluxPalette::Primary(80), 1.0f);
+
+    const int tabCount = 4;
+    const char* tabLabels[] = { "ESP", "Auto Play", "Auto Queue", "Stats" };
+    const char* tabIcons[] = { "\xE2\x96\xA0", "\xE2\x97\x86", "\xE2\x97\x8B", "\xE2\x96\xB2" };
+
+    float tabHeight = 56.0f;
+    float tabY = winPos.y + (barH - tabHeight) * 0.5f;
+    float tabWidth = winW / tabCount;
+
+    SetCursorPos(ImVec2(0, tabY - winPos.y));
+
+    for (int i = 0; i < tabCount; i++) {
+        SetCursorPosX(i * tabWidth);
+        if (TabButton(tabLabels[i], tabIcons[i], g_menu.currentTab == i, tabWidth, tabHeight) && g_menu.currentTab != i) {
+            g_menu.prevTab = g_menu.currentTab;
+            g_menu.currentTab = i;
+            g_menu.tabTransition = 0.001f;
+        }
+    }
 }
 
 static bool ToggleSwitch(const char* label, bool* v) {
@@ -366,115 +393,59 @@ INLINE void DrawESP(ImDrawList* draw) {
 
 #include "ButtonClicker.h"
 
-static void DrawSidebar(float sidebarW, float winH) {
+
+
+static void DrawContentArea(float winW, float winH) {
+    bool need_save = false;
+    float barH = g_menu.tabBarHeight;
+
     ImDrawList* dl = GetWindowDrawList();
     ImVec2 winPos = GetWindowPos();
-    
-    // Solid black sidebar with subtle right separator
-    dl->AddRectFilled(winPos, ImVec2(winPos.x + sidebarW, winPos.y + winH), FluxPalette::SurfaceBg());
-    dl->AddLine(ImVec2(winPos.x + sidebarW - 1, winPos.y), ImVec2(winPos.x + sidebarW - 1, winPos.y + winH),
-                FluxPalette::Primary(60), 1.0f);
-    
-    SetCursorPos(ImVec2(0, 25));
-    
-    BeginGroup();
-    
-    Dummy(ImVec2(sidebarW, 5));
-    SetCursorPosX(20);
-    
-    // Brand: FLUX in orange
-    SetWindowFontScale(1.3f);
-    TextColored(FluxPalette::PrimaryV(), O("INFERNO"));
+
+    dl->AddRectFilled(ImVec2(winPos.x, winPos.y + barH), ImVec2(winPos.x + winW, winPos.y + barH + 50),
+                      FluxPalette::SurfaceCard());
+    dl->AddRectFilled(ImVec2(winPos.x, winPos.y + barH + 49), ImVec2(winPos.x + winW, winPos.y + barH + 50),
+                      FluxPalette::Primary(100));
+
+    const char* tabTitles[] = { "ESP Settings", "Auto Play", "Auto Queue", "Stats" };
+
+    dl->AddRectFilled(ImVec2(winPos.x + 15, winPos.y + barH + 14),
+                      ImVec2(winPos.x + 19, winPos.y + barH + 36),
+                      FluxPalette::Primary(), 2.0f);
+
+    SetCursorPos(ImVec2(28, barH + 12));
+    SetWindowFontScale(1.2f);
+    TextColored(FluxPalette::TextPrimaryV(), "%s", tabTitles[g_menu.currentTab]);
     SetWindowFontScale(1.0f);
-    
-    SetCursorPosX(20);
-    TextColored(FluxPalette::TextMutedV(), O("Engine v1.0"));
-    
-    Dummy(ImVec2(sidebarW, 35));
-    
-    SetCursorPosX(10);
-    if (SidebarButton(O("ESP"), O("\xE2\x96\xA0"), g_menu.currentTab == 0, sidebarW) && g_menu.currentTab != 0) {
-        g_menu.prevTab = g_menu.currentTab; g_menu.currentTab = 0; g_menu.tabTransition = 0.001f;
-    }
-    
-    Dummy(ImVec2(0, 4));
-    SetCursorPosX(10);
-    if (SidebarButton(O("Auto Play"), O("\xE2\x97\x86"), g_menu.currentTab == 1, sidebarW) && g_menu.currentTab != 1) {
-        g_menu.prevTab = g_menu.currentTab; g_menu.currentTab = 1; g_menu.tabTransition = 0.001f;
-    }
-    
-    Dummy(ImVec2(0, 4));
-    SetCursorPosX(10);
-    if (SidebarButton(O("Auto Queue"), O("\xE2\x97\x8B"), g_menu.currentTab == 2, sidebarW) && g_menu.currentTab != 2) {
-        g_menu.prevTab = g_menu.currentTab; g_menu.currentTab = 2; g_menu.tabTransition = 0.001f;
-    }
-    
-    Dummy(ImVec2(0, 4));
-    SetCursorPosX(10);
-    if (SidebarButton(O("Stats"), O("\xE2\x96\xB2"), g_menu.currentTab == 3, sidebarW) && g_menu.currentTab != 3) {
-        g_menu.prevTab = g_menu.currentTab; g_menu.currentTab = 3; g_menu.tabTransition = 0.001f;
-    }
-    
-    // Theme switcher at sidebar bottom
-    Dummy(ImVec2(0, winH - 340));
-    SetCursorPosX(15);
+
+    SetCursorPos(ImVec2(28, barH + 36));
+    TextColored(FluxPalette::TextMutedV(), O("Configure your settings below"));
+
+    SetCursorPos(ImVec2(winW - 180, barH + 10));
     SetWindowFontScale(0.85f);
-    TextColored(FluxPalette::TextMutedV(), O("Theme"));
-    SetWindowFontScale(1.0f);
-    SetCursorPosX(10);
     PushStyleVar(ImGuiStyleVar_FrameRounding, 8.0f);
     PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8, 6));
-    SetNextItemWidth(sidebarW - 20);
+    SetNextItemWidth(150.0f);
     if (Combo("##theme", &current_theme, "Inferno\0Dark\0Light\0Classic\0")) {
         switch_theme(current_theme);
     }
     PopStyleVar(2);
-    
-    EndGroup();
-}
-
-static void DrawContentArea(float sidebarW, float winW, float winH) {
-    bool need_save = false;
-    
-    ImDrawList* dl = GetWindowDrawList();
-    ImVec2 winPos = GetWindowPos();
-    
-    // Content area header strip
-    dl->AddRectFilled(ImVec2(winPos.x + sidebarW, winPos.y), ImVec2(winPos.x + winW, winPos.y + 60),
-                      FluxPalette::SurfaceCard());
-    dl->AddRectFilled(ImVec2(winPos.x + sidebarW, winPos.y + 59), ImVec2(winPos.x + winW, winPos.y + 60),
-                      FluxPalette::Primary(100));
-    
-    const char* tabTitles[] = { "ESP Settings", "Auto Play", "Auto Queue", "Stats" };
-    
-    // Section header with orange accent bar
-    dl->AddRectFilled(ImVec2(winPos.x + sidebarW + 15, winPos.y + 18),
-                      ImVec2(winPos.x + sidebarW + 19, winPos.y + 42),
-                      FluxPalette::Primary(), 2.0f);
-    
-    SetCursorPos(ImVec2(sidebarW + 28, 20));
-    SetWindowFontScale(1.2f);
-    TextColored(FluxPalette::TextPrimaryV(), "%s", tabTitles[g_menu.currentTab]);
     SetWindowFontScale(1.0f);
-    
-    SetCursorPos(ImVec2(sidebarW + 28, 44));
-    TextColored(FluxPalette::TextMutedV(), O("Configure your settings below"));
-    
-    SetCursorPos(ImVec2(sidebarW + 15, 75));
-    
-    // Tab transition slide effect
+
+    SetCursorPos(ImVec2(15, barH + 65));
+
     float contentOffset = 0.0f;
     float contentAlpha = 1.0f;
     if (g_menu.tabTransition < 1.0f && g_menu.tabTransition > 0.001f) {
         float eased = EaseOutQuart(g_menu.tabTransition);
-        contentOffset = (1.0f - eased) * 40.0f;  // slide in from right
+        contentOffset = (1.0f - eased) * 40.0f;
         contentAlpha = eased;
     }
-    
+
     PushStyleColor(ImGuiCol_ChildBg, ImVec4(0, 0, 0, 0));
     PushStyleVar(ImGuiStyleVar_ScrollbarSize, 4.0f);
     SetCursorPosX(GetCursorPosX() + contentOffset);
-    BeginChild(O("##ContentArea"), ImVec2(winW - sidebarW - 30, winH - 90), false, ImGuiWindowFlags_NoScrollbar);
+    BeginChild(O("##ContentArea"), ImVec2(winW - 30, winH - barH - 80), false, ImGuiWindowFlags_NoScrollbar);
     
     switch (g_menu.currentTab) {
         case 0: {
@@ -629,7 +600,6 @@ INLINE void DrawMenu(ImGuiIO& io) {
             jump_buffer_active = 0;
         }
 
-        float targetAlpha = g_menu.isOpen ? 1.0f : 0.0f;
         if (g_menu.isOpen) {
             g_menu.menuAlpha += (1.0f - g_menu.menuAlpha) * io.DeltaTime * 12.0f;
         } else {
@@ -645,38 +615,34 @@ INLINE void DrawMenu(ImGuiIO& io) {
         }
 
         if (g_menu.menuAlpha > 0.01f) {
-            float winW = 860.0f;
-            float winH = 620.0f;
-            
+            float winW = 920.0f;
+            float winH = 660.0f;
+
             SetNextWindowSize(ImVec2(winW, winH), ImGuiCond_Always);
             SetNextWindowPos(ImVec2(Width / 2.0f, Height / 2.0f), ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
-            
+
             PushStyleColor(ImGuiCol_WindowBg, FluxPalette::SurfaceCardV(g_menu.menuAlpha * 0.92f));
             PushStyleVar(ImGuiStyleVar_WindowRounding, 16.0f);
             PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
             PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
             PushStyleVar(ImGuiStyleVar_Alpha, g_menu.menuAlpha);
-            
+
             ImGuiWindowFlags winFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
-            
+
             if (Begin(O("##MainMenu"), &g_menu.isOpen, winFlags)) {
                 ImDrawList* dl = GetWindowDrawList();
                 ImVec2 winPos = GetWindowPos();
-                
-                // Background particles
+
                 DrawParticles(dl, winPos.x, winPos.y, winW, winH, g_menu.menuAlpha * 0.6f);
-                
-                // Glass panel overlay (subtle)
                 DrawGlassPanel(dl, winPos, ImVec2(winPos.x + winW, winPos.y + winH),
                                FluxPalette::SurfaceBg(), 16.0f, 0.08f);
-                
                 dl->AddRect(winPos, ImVec2(winPos.x + winW, winPos.y + winH), FluxPalette::Primary((int)(150 * g_menu.menuAlpha)), 16.0f, 0, 1.5f);
-                
-                DrawSidebar(g_menu.sidebarWidth, winH);
-                DrawContentArea(g_menu.sidebarWidth, winW, winH);
+
+                DrawTabBar(winW);
+                DrawContentArea(winW, winH);
             }
             End();
-            
+
             PopStyleVar(4);
             PopStyleColor();
         }
@@ -783,7 +749,7 @@ static void DrawFloatingButton(ImGuiIO& io) {
             buttonPos.y = ImClamp(buttonPos.y, 0.0f, (float)Height - totalHeight);
         }
         
-        if (IsItemHovered() && IsMouseReleased(0) && !isDragging) {
+        if (IsItemClicked(0) && !isDragging) {
             g_menu.isOpen = !g_menu.isOpen;
         }
         
@@ -964,7 +930,13 @@ INLINE void SetupImgui() {
 
     ImFontConfig font_cfg;
     font_cfg.SizePixels = persistent_float["fFontScale"];
-    io.Fonts->AddFontDefault(&font_cfg);
+    font_cfg.OversampleH = 3;
+    font_cfg.OversampleV = 3;
+    ImFont* mainFont = io.Fonts->AddFontFromFileTTF(O("/system/fonts/Roboto-Bold.ttf"), persistent_float["fFontScale"], &font_cfg);
+    if (!mainFont) {
+        font_cfg.SizePixels = persistent_float["fFontScale"];
+        io.Fonts->AddFontDefault(&font_cfg);
+    }
 
     ImGui_ImplAndroid_Init();
     ImGui_ImplOpenGL3_Init(O("#version 300 es"));
