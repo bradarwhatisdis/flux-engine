@@ -27,13 +27,13 @@ using namespace std;
 #include <GLES3/gl3.h>
 
 struct MenuState {
-    bool isOpen = false;
+    bool isOpen = true; // DEBUG: force open to test rendering
     int currentTab = 0;
     int prevTab = 0;
     float tabTransition = 0.0f;  // 0=idle, animating to 1
     float sidebarWidth = 320.0f;
     float animProgress = 0.0f;
-    float menuAlpha = 0.0f;
+    float menuAlpha = 1.0f; // DEBUG: force visible
     float menuScale = 0.9f;
     ImVec4 accentColor = FluxPalette::PrimaryV();
 };
