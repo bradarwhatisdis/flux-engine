@@ -1,0 +1,33 @@
+name: Build
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup NDK
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r26b
+          add-to-path: false
+
+      - name: Build native library
+        run: |
+          export ANDROID_NDK_HOME=$ANDROID_NDK
+          export PATH=$PATH:$ANDROID_NDK_HOME
+          cd app/src/main/jni
+          ndk-build NDK_PROJECT_PATH=. NDK_LIBS_OUT=../../../libs NDK_APPLICATION_MK=Application.mk APP_BUILD_SCRIPT=Android.mk
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-libs
+          path: app/libs/
