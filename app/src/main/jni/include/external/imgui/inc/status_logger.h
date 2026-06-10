@@ -130,7 +130,7 @@ public:
             }
 
             // Measure text
-            ImVec2 txt_sz = FluxFont::CalcTextSize(msgs[i].text, FluxFont::Small);
+            ImVec2 txt_sz = FluxFont::CalcTextBox(msgs[i].text, FluxFont::Small);
 
             // Draw background pill
             ImVec2 p_min(margin, y - line_h - padding);
@@ -146,7 +146,7 @@ public:
             // Draw text
             ImVec2 txt_pos(margin + padding + icon_sz + 8,
                            p_min.y + (p_max.y - p_min.y - FluxFont::Small) * 0.5f);
-            FluxFont::DrawText(dl, msgs[i].text, txt_pos, text_color, FluxFont::Small);
+            FluxFont::RenderText(dl, msgs[i].text, txt_pos, text_color, FluxFont::Small);
 
             y = p_min.y - 4.0f; // gap between messages
         }

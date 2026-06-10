@@ -63,8 +63,17 @@ inline void DrawGlassPanel(ImDrawList* dl, ImVec2 p_min, ImVec2 p_max,
 inline void DrawDropShadow(ImDrawList* dl, ImVec2 p_min, ImVec2 p_max,
                            float shadow_size = 8.0f, float rounding = 12.0f,
                            ImU32 shadow_color = IM_COL32(0, 0, 0, 100)) {
-    dl->AddShadowRect(p_min, p_max, shadow_color, shadow_size, ImVec2(0, 0),
-                      rounding, ImDrawFlags_RoundCornersAll);
+    // Manual shadow via layered translucent rects
+    for (int i = 0; i < 4; i++) {
+        float t = (float)i / 4.0f;
+        float inset = shadow_size * (1.0f - t);
+        ImU32 col = IM_COL32(0, 0, 0, (int)(20 * (1.0f - t)));
+        if (col & 0xFF000000) {
+            dl->AddRectFilled(ImVec2(p_min.x - inset, p_min.y - inset),
+                              ImVec2(p_max.x + inset, p_max.y + inset),
+                              col, rounding + 2.0f * t);
+        }
+    }
 }
 
 // ─── Gradient Text (left-to-right color blend) ────────────────

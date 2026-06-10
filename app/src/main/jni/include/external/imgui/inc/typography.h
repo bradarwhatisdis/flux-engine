@@ -34,8 +34,8 @@ struct FluxFont {
         dl->AddText(ImGui::GetFont(), Tiny, pos, color, text);
     }
 
-    static void DrawText(ImDrawList* dl, const char* text, ImVec2 pos,
-                         ImU32 color, float size, ImU32 shadow = 0) {
+    static void RenderText(ImDrawList* dl, const char* text, ImVec2 pos,
+                           ImU32 color, float size, ImU32 shadow = 0) {
         if (shadow) {
             dl->AddText(ImGui::GetFont(), size * 1.02f,
                         ImVec2(pos.x + 1, pos.y + 1), shadow, text);
@@ -44,7 +44,7 @@ struct FluxFont {
     }
 
     // ── Text measurement ─────────────────────────────────
-    static ImVec2 CalcTextSize(const char* text, float size) {
+    static ImVec2 CalcTextBox(const char* text, float size) {
         return ImGui::GetFont()->CalcTextSizeA(size, FLT_MAX, 0.0f, text);
     }
 };

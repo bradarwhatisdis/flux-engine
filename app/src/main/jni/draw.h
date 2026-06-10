@@ -94,7 +94,7 @@ static bool SidebarButton(const char* label, const char* icon, bool selected, fl
     float iconOffset = 6.0f * animT;
     float iconX = bb.Min.x + 20.0f + iconOffset;
     float iconY = bb.Min.y + (size.y - FluxFont::Small) * 0.5f;
-    FluxFont::DrawText(dl, icon, ImVec2(iconX, iconY),
+    FluxFont::RenderText(dl, icon, ImVec2(iconX, iconY),
                        selected ? FluxPalette::TextPrimary() : FluxPalette::TextMuted((int)(180 + 75 * animT)),
                        FluxFont::Small);
     
@@ -837,13 +837,13 @@ INLINE void DrawLogin(ImGuiIO& io) {
     dl->PathStroke(FluxPalette::Primary(40), ImDrawFlags_None, arcW);
 
     // Title
-    ImVec2 titleSize = FluxFont::CalcTextSize(O("FLUX ENGINE"), FluxFont::H2);
+    ImVec2 titleSize = FluxFont::CalcTextBox(O("FLUX ENGINE"), FluxFont::H2);
     dl->AddText(ImGui::GetFont(), FluxFont::H2,
                 ImVec2(winPos.x + (cardW - titleSize.x) * 0.5f, winPos.y + 30),
                 FluxPalette::TextPrimary(), O("FLUX ENGINE"));
 
     // Subtitle
-    ImVec2 subSize = FluxFont::CalcTextSize(O("8 Ball Pool Mod"), FluxFont::Small);
+    ImVec2 subSize = FluxFont::CalcTextBox(O("8 Ball Pool Mod"), FluxFont::Small);
     dl->AddText(ImGui::GetFont(), FluxFont::Small,
                 ImVec2(winPos.x + (cardW - subSize.x) * 0.5f, winPos.y + 72),
                 FluxPalette::TextSecondary(200), O("8 Ball Pool Mod"));
@@ -889,7 +889,7 @@ INLINE void DrawLogin(ImGuiIO& io) {
         SetCursorPosY(165);
         
         // Instruction text
-        ImVec2 infoSize = FluxFont::CalcTextSize(O("Paste your license key"), FluxFont::Small);
+        ImVec2 infoSize = FluxFont::CalcTextBox(O("Paste your license key"), FluxFont::Small);
         SetCursorPosX((cardW - infoSize.x) * 0.5f);
         TextColored(FluxPalette::TextMutedV(), O("Paste your license key"));
 
@@ -925,7 +925,7 @@ INLINE void DrawLogin(ImGuiIO& io) {
         Dummy(ImVec2(0, 30));
         
         // Footer text
-        ImVec2 helpSize = FluxFont::CalcTextSize(O("Key is read from clipboard"), FluxFont::Tiny);
+        ImVec2 helpSize = FluxFont::CalcTextBox(O("Key is read from clipboard"), FluxFont::Tiny);
         SetCursorPosX((cardW - helpSize.x) * 0.5f);
         TextColored(FluxPalette::TextMutedV(), O("Key is read from clipboard"));
     }
