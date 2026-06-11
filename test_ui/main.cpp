@@ -305,19 +305,19 @@ static void DrawContentArea(float winW, float winH) {
 
     // Header strip below tab bar
     dl->AddRectFilled(ImVec2(winPos.x, winPos.y + barH),
-                      ImVec2(winPos.x + winW, winPos.y + barH + 50), FluxPalette::SurfaceCard());
-    dl->AddRectFilled(ImVec2(winPos.x, winPos.y + barH + 49),
-                      ImVec2(winPos.x + winW, winPos.y + barH + 50), FluxPalette::Primary(100));
+                      ImVec2(winPos.x + winW, winPos.y + barH + 60), FluxPalette::SurfaceCard());
+    dl->AddRectFilled(ImVec2(winPos.x, winPos.y + barH + 59),
+                      ImVec2(winPos.x + winW, winPos.y + barH + 60), FluxPalette::Primary(100));
 
     const char* tabTitles[] = { "ESP Settings", "Auto Play", "Auto Queue", "Stats" };
 
-    dl->AddRectFilled(ImVec2(winPos.x + 15, winPos.y + barH + 14),
-                      ImVec2(winPos.x + 19, winPos.y + barH + 36), FluxPalette::Primary(), 2.0f);
-    ImGui::SetCursorPos(ImVec2(28, barH + 12));
+    dl->AddRectFilled(ImVec2(winPos.x + 15, winPos.y + barH + 10),
+                      ImVec2(winPos.x + 19, winPos.y + barH + 30), FluxPalette::Primary(), 2.0f);
+    ImGui::SetCursorPos(ImVec2(28, barH + 8));
     ImGui::SetWindowFontScale(1.2f);
     ImGui::TextColored(FluxPalette::TextPrimaryV(), "%s", tabTitles[g_menu.currentTab]);
     ImGui::SetWindowFontScale(1.0f);
-    ImGui::SetCursorPos(ImVec2(28, barH + 36));
+    ImGui::SetCursorPos(ImVec2(28, barH + 44));
     ImGui::TextColored(FluxPalette::TextMutedV(), "Configure your settings below");
 
     // Theme switcher
@@ -336,13 +336,12 @@ static void DrawContentArea(float winW, float winH) {
         contentOffset = (1.0f - EaseOutQuart(g_menu.tabTransition)) * 40.0f;
     }
 
-    ImGui::SetCursorPos(ImVec2(15, barH + 65));
+    ImGui::SetCursorPos(ImVec2(15, barH + 75));
     ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0, 0, 0, 0));
     ImGui::PushStyleVar(ImGuiStyleVar_ScrollbarSize, 4.0f);
     float cx = ImGui::GetCursorPosX() + contentOffset;
     ImGui::SetCursorPosX(cx);
-    ImGui::BeginChild("##ContentArea", ImVec2(winW - 30, winH - barH - 80), false,
-                      ImGuiWindowFlags_NoScrollbar);
+    ImGui::BeginChild("##ContentArea", ImVec2(winW - 30, winH - barH - 100), false);
 
     // Tab content (simplified — show toggle switches for demo)
     switch (g_menu.currentTab) {
@@ -426,7 +425,7 @@ static bool g_particles_init = false;
 
 static void InitParticles() {
     for (int i = 0; i < MAX_PARTICLES; i++) {
-        g_particles[i].pos = ImVec2((float)(rand() % 800), (float)(rand() % 580));
+        g_particles[i].pos = ImVec2((float)(rand() % Width), (float)(rand() % Height));
         g_particles[i].vel = ImVec2((float)(rand() % 20 - 10) * 0.5f,
                                     -(float)(rand() % 30 + 10) * 0.3f);
         g_particles[i].size = (float)(rand() % 6 + 2);
@@ -460,6 +459,8 @@ static void DrawParticles(ImDrawList* dl, float winX, float winY,
 
 static void DrawFloatingButton(ImGuiIO& io) {
     static ImVec2 buttonPos = ImVec2(80, 60);
+    static ImVec2 buttonPosSave = ImVec2(80, 60);
+    static bool wasMenuOpen = false;
     static bool isDragging = false;
     static float hoverAnim = 0.0f;
     static float pulseTime = 0.0f;
@@ -469,6 +470,25 @@ static void DrawFloatingButton(ImGuiIO& io) {
     float textWidth = 140.0f;
     float totalWidth = buttonSize + textWidth + 15.0f;
     float totalHeight = buttonSize + 4.0f;
+
+    // Auto-reposition when menu opens and button overlaps it
+    if (g_menu.isOpen) {
+        float menuW = 920.0f, menuH = 660.0f;
+        float menuL = (Width - menuW) * 0.5f;
+        float menuR = menuL + menuW;
+        float btnL = buttonPos.x;
+        float btnR = buttonPos.x + totalWidth;
+        if (btnR > menuL && btnL < menuR) {
+            if (!wasMenuOpen && !isDragging)
+                buttonPosSave = buttonPos;
+            buttonPos.x = ImMax(4.0f, menuL - totalWidth - 8.0f);
+        }
+        wasMenuOpen = true;
+    } else {
+        if (wasMenuOpen && !isDragging)
+            buttonPos = buttonPosSave;
+        wasMenuOpen = false;
+    }
 
     bool isHovered = false;
     pulseTime += io.DeltaTime;
