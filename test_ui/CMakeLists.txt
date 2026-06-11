@@ -15,6 +15,7 @@ FetchContent_Declare(
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS    OFF CACHE BOOL "" FORCE)
 set(GLFW_INSTALL        OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_WAYLAND  OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(glfw)
 
 # ImGui (project copy only has Android backend; need desktop backends)
