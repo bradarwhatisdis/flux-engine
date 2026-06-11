@@ -43,4 +43,5 @@ target_include_directories(inferno_ui_test PRIVATE
   ${glfw_SOURCE_DIR}/include
 )
 
-target_link_libraries(inferno_ui_test PRIVATE glfw)
+find_package(OpenGL REQUIRED)
+target_link_libraries(inferno_ui_test PRIVATE glfw OpenGL::GL)
