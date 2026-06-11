@@ -18,7 +18,7 @@ set(GLFW_INSTALL        OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_WAYLAND  OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(glfw)
 
-# ImGui (project copy only has Android backend; need desktop backends)
+# ImGui (desktop backends not available in project copy)
 FetchContent_Declare(
   imgui_src
   GIT_REPOSITORY https://github.com/ocornut/imgui.git
@@ -26,6 +26,9 @@ FetchContent_Declare(
   GIT_SHALLOW    TRUE
 )
 FetchContent_MakeAvailable(imgui_src)
+
+# Use Roboto-Medium bundled with ImGui (closest bold available)
+set(FONT_PATH "${imgui_src_SOURCE_DIR}/misc/fonts/Roboto-Medium.ttf")
 
 add_executable(inferno_ui_test
   main.cpp
@@ -35,6 +38,10 @@ add_executable(inferno_ui_test
   ${imgui_src_SOURCE_DIR}/imgui_tables.cpp
   ${imgui_src_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
   ${imgui_src_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
+)
+
+target_compile_definitions(inferno_ui_test PRIVATE
+  FONT_PATH="${FONT_PATH}"
 )
 
 target_include_directories(inferno_ui_test PRIVATE

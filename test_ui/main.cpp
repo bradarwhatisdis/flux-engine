@@ -628,7 +628,16 @@ int main() {
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_IsTouchScreen;
-    io.Fonts->AddFontDefault();
+    // Load bundled Roboto-Bold (FONT_PATH defined by CMake); fall back to default
+    ImFontConfig font_cfg;
+    font_cfg.SizePixels = 38.0f;
+    font_cfg.OversampleH = 3;
+    font_cfg.OversampleV = 3;
+    ImFont* font = io.Fonts->AddFontFromFileTTF(FONT_PATH, 38.0f, &font_cfg);
+    if (!font) {
+        font_cfg.SizePixels = 38.0f;
+        io.Fonts->AddFontDefault(&font_cfg);
+    }
 
     ImGui::StyleColorsDark();
 
